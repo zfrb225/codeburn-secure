@@ -38,7 +38,7 @@ function generatePlugin(bin: string): string {
 
 export PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.local/bin:$HOME/.npm-global/bin:$PATH"
 
-${bin} status --format menubar 2>/dev/null || echo "-- | sfimage=flame.fill"
+"${bin}" status --format menubar 2>/dev/null || echo "-- | sfimage=flame.fill"
 `
 }
 

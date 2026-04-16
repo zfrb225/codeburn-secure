@@ -1,6 +1,6 @@
-import { readFile, writeFile, mkdir } from 'fs/promises'
+import { readFile, writeFile, rename, mkdir } from 'fs/promises'
 import { join } from 'path'
-import { homedir } from 'os'
+import { homedir, tmpdir } from 'os'
 
 export type ModelCosts = {
   inputCostPerToken: number
@@ -19,7 +19,9 @@ type LiteLLMEntry = {
   provider_specific_entry?: { fast?: number }
 }
 
-const LITELLM_URL = 'https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json'
+// Pinned to specific commit for supply chain safety. Update periodically after verification.
+// See: https://github.com/BerriAI/litellm/commit/72a461ba4ab5be96902380870b4994adbbcf7ad6
+const LITELLM_URL = 'https://raw.githubusercontent.com/BerriAI/litellm/72a461ba4ab5be96902380870b4994adbbcf7ad6/model_prices_and_context_window.json'
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 const WEB_SEARCH_COST = 0.01
 
@@ -90,10 +92,12 @@ async function fetchAndCachePricing(): Promise<Map<string, ModelCosts>> {
   }
 
   await mkdir(getCacheDir(), { recursive: true })
-  await writeFile(getCachePath(), JSON.stringify({
+  const tmpPath = join(tmpdir(), `codeburn-${Date.now()}.tmp`)
+  await writeFile(tmpPath, JSON.stringify({
     timestamp: Date.now(),
     data: Object.fromEntries(pricing),
   }))
+  await rename(tmpPath, getCachePath())
 
   return pricing
 }

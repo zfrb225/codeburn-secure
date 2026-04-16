@@ -79,14 +79,16 @@ function parseApiCall(entry: JournalEntry): ParsedApiCall | null {
   if (!msg?.usage || !msg?.model) return null
 
   const usage = msg.usage
+  const safeNum = (v: unknown): number =>
+    typeof v === 'number' && isFinite(v) && v >= 0 ? v : 0
   const tokens: TokenUsage = {
-    inputTokens: usage.input_tokens ?? 0,
-    outputTokens: usage.output_tokens ?? 0,
-    cacheCreationInputTokens: usage.cache_creation_input_tokens ?? 0,
-    cacheReadInputTokens: usage.cache_read_input_tokens ?? 0,
+    inputTokens: safeNum(usage.input_tokens),
+    outputTokens: safeNum(usage.output_tokens),
+    cacheCreationInputTokens: safeNum(usage.cache_creation_input_tokens),
+    cacheReadInputTokens: safeNum(usage.cache_read_input_tokens),
     cachedInputTokens: 0,
     reasoningTokens: 0,
-    webSearchRequests: usage.server_tool_use?.web_search_requests ?? 0,
+    webSearchRequests: safeNum(usage.server_tool_use?.web_search_requests),
   }
 
   const tools = extractToolNames(msg.content ?? [])

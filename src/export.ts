@@ -1,5 +1,6 @@
 import { writeFile } from 'fs/promises'
 import { resolve } from 'path'
+import { homedir } from 'os'
 
 import { CATEGORY_LABELS, type ProjectSummary, type TaskCategory } from './types.js'
 import { getCostColumnHeader, convertCost } from './currency.js'
@@ -184,6 +185,9 @@ export async function exportCsv(periods: PeriodExport[], outputPath: string): Pr
   parts.push('')
 
   const fullPath = resolve(outputPath)
+  if (!fullPath.startsWith(homedir()) && !fullPath.startsWith(process.cwd())) {
+    console.warn('[codeburn] Warning: output path is outside home directory and current working directory.')
+  }
   await writeFile(fullPath, parts.join('\n'), 'utf-8')
   return fullPath
 }
@@ -211,6 +215,9 @@ export async function exportJson(periods: PeriodExport[], outputPath: string): P
   }
 
   const fullPath = resolve(outputPath)
+  if (!fullPath.startsWith(homedir()) && !fullPath.startsWith(process.cwd())) {
+    console.warn('[codeburn] Warning: output path is outside home directory and current working directory.')
+  }
   await writeFile(fullPath, JSON.stringify(data, null, 2), 'utf-8')
   return fullPath
 }

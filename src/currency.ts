@@ -1,6 +1,6 @@
-import { readFile, writeFile, mkdir } from 'fs/promises'
+import { readFile, writeFile, rename, mkdir } from 'fs/promises'
 import { join } from 'path'
-import { homedir } from 'os'
+import { homedir, tmpdir } from 'os'
 
 import { readConfig } from './config.js'
 
@@ -74,7 +74,9 @@ async function loadCachedRate(code: string): Promise<number | null> {
 
 async function cacheRate(code: string, rate: number): Promise<void> {
   await mkdir(getCacheDir(), { recursive: true })
-  await writeFile(getRateCachePath(), JSON.stringify({ timestamp: Date.now(), code, rate }))
+  const tmpPath = join(tmpdir(), `codeburn-${Date.now()}.tmp`)
+  await writeFile(tmpPath, JSON.stringify({ timestamp: Date.now(), code, rate }))
+  await rename(tmpPath, getRateCachePath())
 }
 
 async function getExchangeRate(code: string): Promise<number> {
@@ -97,6 +99,10 @@ export async function loadCurrency(): Promise<void> {
   if (!config.currency) return
 
   const code = config.currency.code.toUpperCase()
+  // config file values are not validated by the CLI's isValidCurrencyCode check,
+  // so we must validate here before using the code in a URL or Intl API call.
+  if (!isValidCurrencyCode(code)) return
+
   const rate = await getExchangeRate(code)
   const symbol = config.currency.symbol ?? resolveSymbol(code)
 
